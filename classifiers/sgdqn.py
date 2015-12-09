@@ -3,7 +3,7 @@ import math
 
 class SGDQN(object):
 	"""docstring for SGDQN"""
-	def __init__(self, reg, t0, skip, maxiter = 1000000, X = None, Y = None):
+	def __init__(self, reg, t0, skip, maxiter = 1000000, X = None, Y = None, check = False):
 		super(SGDQN, self).__init__()
 		self.reg = reg
 		self.t0 = t0
@@ -21,6 +21,8 @@ class SGDQN(object):
 
 		self.X = X
 		self.Y = Y
+
+		self.check = check
 
 	def update_flaw(self, X, Y):
 		x_shape = X.shape
@@ -75,10 +77,12 @@ class SGDQN(object):
 			#Update the regularization with learning rate 1/ (iteration + t0)
 			self.W = self.W - self.skip * self.reg / (self.iteration + self.t0) * np.multiply(self.B, self.W)
 			self.V = self.W
-
-		#Sanity Check on Loss Function
-		if self.iteration % 1000 == 0:
-			print "loss", self.loss(self.X, self.Y)
+		
+		if self.check:
+			#Sanity Check on Loss Function
+			if self.iteration % 1000 == 0:
+				print "loss", self.loss(self.X, self.Y)
+			
 
 		self.iteration = self.iteration + 1
 
@@ -137,10 +141,10 @@ class SGDQN(object):
 		#SGD step
 		self.W = self.W - self.dloss(self.z) * Y[0] * np.multiply(X, self.B).T
 		
-		
-		#Sanity Check on Loss Function
-		if self.iteration % 1000 == 0:
-			print "loss", self.loss(self.X, self.Y)
+		if self.check:
+			#Sanity Check on Loss Function
+			if self.iteration % 1000 == 0:
+				print "loss", self.loss(self.X, self.Y)
 		
 		
 		self.iteration = self.iteration + 1

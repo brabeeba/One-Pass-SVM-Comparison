@@ -16,8 +16,9 @@ def benchmark():
 		
 		reg = 1e-4
 		
-		model1 = classifiers.Pegasos(reg, 1)
+		model1 = classifiers.Pegasos(reg, 1, X=X, Y=Y)
 		model2 = classifiers.SGDQN(reg, 1e5, 10, X=X, Y=Y)
+		model3 = classifiers.ASGD(reg, X=X, Y=Y)
 
 
 		start = time.clock()
@@ -26,6 +27,7 @@ def benchmark():
 			for i in xrange(0, sample):
 				model1.update(X[[i]], Y[[i]])
 				model2.update(X[[i]], Y[[i]])
+				model3.update(X[[i]], Y[[i]])
 
 		end = time.clock()
 

@@ -1,18 +1,23 @@
 import numpy as np
 import math
 
-class Pegasos(object):
-	"""docstring for Pegasos"""
-	def __init__(self, reg, k, maxiter = 1000000, X=None, Y=None, check = False ):
-		super(Pegasos, self).__init__()
+class ASGD(object):
+	"""docstring for ASGD"""
+	def __init__(self, reg, r0=1e-2, a=1e-2, c=2.0/3, maxiter = 1000000, X=None, Y=None, check = False):
+		super(ASGD, self).__init__()
 		self.reg = reg
-		self.k = k
-		self.W = None
-		self.iteration = 2
+		self.r0 = r0
+		self.a = a
+		self.c = c
+
 		self.maxiter = maxiter
 		self.X = X
 		self.Y = Y
 
+		self.W = None
+		self.SW = None 
+
+		self.iteration = 1
 		self.check = check
 
 	def update(self, X, Y):
@@ -23,11 +28,15 @@ class Pegasos(object):
 
 		assert len(y_shape) == 1, "This is a binary svm. Do ova or ovo method instead of multiclass."
 
-		if self.W is None:
-			self.W = 0.1/math.sqrt(self.reg) * np.random.randn(x_shape[1] , 1)
 
-		#Learning Rate
-		eta = 1.0 / (self.reg * self.iteration)
+		if self.W is None or self.SW is None:
+			self.SW = 0.1 / math.sqrt(self.reg) * np.random.randn(x_shape[1] , 1) 
+			self.W = np.copy(self.SW)
+		
+
+		eta = self.r0 * (1 + self.r0 * self.a * self.iteration) ** (-self.c)
+		rho = 1.0 / (1 + self.iteration)
+
 
 		#Evaluation
 		p = np.multiply(np.dot(X, self.W), Y)
@@ -38,14 +47,10 @@ class Pegasos(object):
 			support = 0
 
 		#Stochastic Gradient Descent Step
-		self.W = (1.0 - eta * self.reg) * self.W + eta * support / self.k 
+		self.SW = (1.0 - eta * self.reg) * self.W + eta * support
 
-		#Projection Step
-		assert np.linalg.norm(self.W) != 0, "You can't divide zero"
+		self.W = (1.0 - rho) * self.W + rho * self.SW
 
-		projection = 1.0 / math.sqrt(self.reg) / (np.linalg.norm(self.W))
-		if projection < 1.0:
-			self.W = projection * self.W
 
 		if self.check:
 			#Sanity Check on Loss Function
