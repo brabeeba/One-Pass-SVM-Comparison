@@ -32,13 +32,16 @@ class Pegasos(object):
 		#Evaluation
 		p = np.multiply(np.dot(X, self.W), Y)
 
+		
+
 		#Get the support
-		support = np.multiply(X, Y)
+		support = Y[0] * X
 		if p[0][0] < 1:
-			support = 0
+			support = 0 * X
 
 		#Stochastic Gradient Descent Step
-		self.W = (1.0 - eta * self.reg) * self.W + eta * support / self.k 
+		self.W = (1.0 - eta * self.reg) * self.W + eta * support.T / self.k 
+
 
 		#Projection Step
 		assert np.linalg.norm(self.W) != 0, "You can't divide zero"
@@ -57,6 +60,15 @@ class Pegasos(object):
 
 	def solve(self):
 		pass
+
+	def score(self, X, Y):
+		print np.dot(X, self.W).shape
+		print Y.shape
+		prediction = np.multiply(np.dot(X, self.W), Y.reshape(Y.shape[0], 1))
+		print "f", prediction.shape
+		print prediction[prediction > 0].shape
+		return len(prediction[prediction > 0]) / float(len(prediction))
+		
 
 	def loss(self, X, Y):
 		loss = 1 - np.multiply(np.dot(X, self.W), Y.reshape(Y.shape[0], 1))

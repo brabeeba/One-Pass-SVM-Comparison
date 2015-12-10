@@ -132,6 +132,9 @@ class OLBFGS(object):
 			p = p + (a[-(x+1)] - b) * tempS
 
 		return p
+	def score(self, X, Y):
+		prediction = np.multiply(np.dot(X, self.W), Y.reshape(Y.shape[0], 1))
+		return len(prediction[prediction > 0]) / float(len(prediction))
 			
 
 	def dloss(self, z):

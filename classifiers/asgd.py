@@ -44,10 +44,10 @@ class ASGD(object):
 		#Get the support
 		support = np.multiply(X, Y)
 		if p[0][0] < 1:
-			support = 0
+			support = 0 * X
 
 		#Stochastic Gradient Descent Step
-		self.SW = (1.0 - eta * self.reg) * self.W + eta * support
+		self.SW = (1.0 - eta * self.reg) * self.W + eta * support.T
 
 		self.W = (1.0 - rho) * self.W + rho * self.SW
 
@@ -62,6 +62,11 @@ class ASGD(object):
 
 	def solve(self):
 		pass
+
+	def score(self, X, Y):
+		
+		prediction = np.multiply(np.dot(X, self.W), Y.reshape(Y.shape[0], 1))
+		return len(prediction[prediction > 0]) / float(len(prediction))
 
 	def loss(self, X, Y):
 		loss = 1 - np.multiply(np.dot(X, self.W), Y.reshape(Y.shape[0], 1))

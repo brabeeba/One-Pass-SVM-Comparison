@@ -141,10 +141,15 @@ class SGDQN(object):
 			self.count = self.skip
 			self.updateB = True
 			self.V = self.W
-			self.W = self.W - self.skip * self.reg * np.multiply(self.B, self.W)
+			
+			self.W = self.W - self.skip * self.reg * np.multiply(self.B.reshape(self.B.shape[0], 1), self.W)
+
+			
 
 		#SGD step
 		self.W = self.W - self.dloss(self.z) * Y[0] * np.multiply(X, self.B).T
+		
+		
 		
 		if self.check:
 			#Sanity Check on Loss Function
@@ -159,6 +164,9 @@ class SGDQN(object):
 		if z < 1:
 			return -1
 		return 0
+	def score(self, X, Y):
+		prediction = np.multiply(np.dot(X, self.W), Y.reshape(Y.shape[0], 1))
+		return len(prediction[prediction > 0]) / float(len(prediction))
 	
 	def loss(self, X, Y):
 		loss = 1 - np.multiply(np.dot(X, self.W), Y.reshape(Y.shape[0], 1))
