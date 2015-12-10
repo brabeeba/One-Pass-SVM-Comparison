@@ -3,7 +3,7 @@ import math
 
 class ASGD(object):
 	"""docstring for ASGD"""
-	def __init__(self, reg, r0=1e-2, a=1e-2, c=2.0/3, maxiter = 1000000, X=None, Y=None, check = False):
+	def __init__(self, reg, r0=1e-2, a=1e-2, c=2.0/3 , maxiter = 1000000, X=None, Y=None, check = False):
 		super(ASGD, self).__init__()
 		self.reg = reg
 		self.r0 = r0
@@ -47,7 +47,7 @@ class ASGD(object):
 			support = 0 * X
 
 		#Stochastic Gradient Descent Step
-		self.SW = (1.0 - eta * self.reg) * self.W + eta * support.T
+		self.SW = (1.0 - eta * self.reg) * self.SW + eta * support.T
 
 		self.W = (1.0 - rho) * self.W + rho * self.SW
 

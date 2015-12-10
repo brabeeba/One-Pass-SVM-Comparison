@@ -24,7 +24,7 @@ class Pegasos(object):
 		assert len(y_shape) == 1, "This is a binary svm. Do ova or ovo method instead of multiclass."
 
 		if self.W is None:
-			self.W = 0.1/math.sqrt(self.reg) * np.random.randn(x_shape[1] , 1)
+			self.W = 1/math.sqrt(self.reg) * np.random.randn(x_shape[1] , 1)
 
 		#Learning Rate
 		eta = 1.0 / (self.reg * self.iteration)
@@ -62,11 +62,8 @@ class Pegasos(object):
 		pass
 
 	def score(self, X, Y):
-		print np.dot(X, self.W).shape
-		print Y.shape
+		
 		prediction = np.multiply(np.dot(X, self.W), Y.reshape(Y.shape[0], 1))
-		print "f", prediction.shape
-		print prediction[prediction > 0].shape
 		return len(prediction[prediction > 0]) / float(len(prediction))
 		
 

@@ -2,6 +2,7 @@ import time
 import classifiers
 import numpy as np
 import matplotlib.pyplot as plt
+import argparse
 
 from sklearn.cross_validation import train_test_split
 from sklearn.datasets import make_classification
@@ -99,10 +100,9 @@ def benchmark1():
 	plt.tight_layout()
 	plt.show()
 
-def benchmark2():
+def benchmark2(sample):
 	epoch = 6
 	epoches = [0.5 * x for x in xrange(1, epoch * 2 + 1)]
-	sample = 100000
 	X, Y = make_classification(n_samples = sample, random_state = 1111)
 	Y[Y==0] = -1
 	X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.33, random_state=42)
@@ -110,7 +110,7 @@ def benchmark2():
 	train_number = len(X_train)
 	test_number = len(X_test)
 
-	model1 = classifiers.Pegasos(1e-2, 1, X=X_train, Y=Y_train, maxiter = 1e8)
+	model1 = classifiers.Pegasos(1e-4, 1, X=X_train, Y=Y_train, maxiter = 1e8)
 	model2 = classifiers.SGDQN(1e-4, 1e5, 10, X=X_train, Y=Y_train, maxiter = 1e8, check = False)
 	model3 = classifiers.ASGD(1e-4, X=X_train, Y=Y_train, maxiter = 1e8)
 	model4 = classifiers.OLBFGS(1e-4, 10 , X=X_train, Y=Y_train, check = False, maxiter = 1e8)
@@ -130,24 +130,24 @@ def benchmark2():
 
 
 
-		if x % int(sample / 2.0) == 0:
+		if x % int(train_number / 2.0) == 0:
 			score1.append(model1.score(X_test, Y_test))
-			print "Pegasos accuracy {:10.4f} at {:.2f} epoches".format(score1[-1], float(x)/sample)
+			print "Pegasos accuracy {:10.4f} at {:.2f} epoches".format(score1[-1], float(x)/train_number)
 
 			score2.append(model2.score(X_test, Y_test))
-			print "SGDQN accuracy {:10.4f} at {:.2f} epoches".format(score2[-1], float(x)/sample)
+			print "SGDQN accuracy {:10.4f} at {:.2f} epoches".format(score2[-1], float(x)/train_number)
 
 			score3.append(model3.score(X_test, Y_test))
-			print "ASGD accuracy {:10.4f} at {:.2f} epoches".format(score3[-1], float(x)/sample)
+			print "ASGD accuracy {:10.4f} at {:.2f} epoches".format(score3[-1], float(x)/train_number)
 
 			#score4.append(model4.score(X_test, Y_test))
-			#print "oLBFGS accuracy {:10.4f} at {:.2f} epoches".format(score4[-1], float(x)/sample)
+			#print "oLBFGS accuracy {:10.4f} at {:.2f} epoches".format(score4[-1], float(x)/train_number)
 
 
 	plt.plot(epoches, score1, color = 'b', label='Pegasos')
 	plt.plot(epoches, score2, color='r', label='SGD-QN')
 	plt.plot(epoches, score3, color = 'g', label = 'ASGD')
-	plt.plot(epoches, score4, color = 'y', label = 'oLBFGS')
+	#plt.plot(epoches, score4, color = 'y', label = 'oLBFGS')
 	plt.xlabel('epoches')
 	plt.ylabel('accuracy')
 	plt.title('Epoches to Accuracy')
@@ -161,5 +161,20 @@ def benchmark2():
 
 
 if __name__ == '__main__':
-	#benchmark1()
-	benchmark2()
+	parser = argparse.ArgumentParser(description='Enter which benchmark test you want to execute. 1 or 2?')
+	parser.add_argument('--t', type = int)
+	parser.add_argument('--sample', type = int)
+	args = parser.parse_args()
+	
+	if args.t == 1:
+		benchmark1()
+	elif args.t == 2:
+		if args.sample is None:
+			print "Please provide number of sample size"
+		else:
+			if args.sample < 0:
+				print "Please provide a positive number"
+			else:
+				benchmark2(args.sample)
+	else:
+		print "Usage: python benchmark.py --t [1 or 2] --sample [int]"
