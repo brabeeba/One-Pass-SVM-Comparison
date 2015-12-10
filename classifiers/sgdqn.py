@@ -25,6 +25,8 @@ class SGDQN(object):
 		self.check = check
 
 	def update_flaw(self, X, Y):
+		if self.iteration > self.maxiter:
+			return
 		x_shape = X.shape
 		y_shape = Y.shape
 
@@ -114,9 +116,12 @@ class SGDQN(object):
 			if diff_loss == 0:
 				r.fill(self.reg)
 			else:
-				r = self.reg - diff_loss / self.dloss(self.z) * np.reciprocal(self.B)
-				#If X_t is 0, r_t converges to reg
-				r[X.reshape(x_shape[1]) == 0] = self.reg
+				if self.dloss(self.z) == 0:
+					r.fill(self.reg)
+				else:
+					r = self.reg - diff_loss / self.dloss(self.z) * np.reciprocal(self.B)
+					#If X_t is 0, r_t converges to reg
+					r[X.reshape(x_shape[1]) == 0] = self.reg
 
 			temp1 = np.empty(x_shape[1])
 			temp1.fill(self.reg)
