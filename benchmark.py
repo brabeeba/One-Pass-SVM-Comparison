@@ -19,15 +19,17 @@ def benchmark():
 		model1 = classifiers.Pegasos(reg, 1, X=X, Y=Y)
 		model2 = classifiers.SGDQN(reg, 1e5, 10, X=X, Y=Y)
 		model3 = classifiers.ASGD(reg, X=X, Y=Y)
+		model4 = classifiers.OLBFGS(reg, 10 , X=X, Y=Y, check = True)
 
 
 		start = time.clock()
 
 		for epoch in xrange(1,epoches + 1):
 			for i in xrange(0, sample):
-				model1.update(X[[i]], Y[[i]])
-				model2.update(X[[i]], Y[[i]])
-				model3.update(X[[i]], Y[[i]])
+				#model1.update(X[[i]], Y[[i]])
+				#model2.update(X[[i]], Y[[i]])
+				#model3.update(X[[i]], Y[[i]])
+				model4.update(X[[i]], Y[[i]])
 
 		end = time.clock()
 
