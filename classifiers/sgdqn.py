@@ -96,36 +96,34 @@ class SGDQN(object):
 
 		#Initialize the learning rate as reg * t0
 		if self.B is None:
-			self.B = np.empty(x_shape[1])
+			self.B = np.empty((x_shape[1], y_shape[1]))
 			self.B.fill(1.0/(self.reg * self.t0))
 
 		if self.W is None:
-			self.W = np.zeros((x_shape[1], 1))
+			self.W = np.zeros((x_shape[1], y_shape[1]))
 
 		if self.V is None:
-			self.V = np.zeros((x_shape[1], 1))
+			self.V = np.zeros((x_shape[1], y_shape[1]))
+
 
 		#Update the Hessian Matrix
 		if self.updateB:
 			#Calculate the gradient difference
-			diff_loss = self.dloss(np.multiply(np.dot(X, self.W), Y)[0][0]) - self.dloss(np.multiply(np.dot(X, self.V), Y)[0][0])
+			diff_loss = self.vectorize_dloss(np.multiply(np.dot(X, self.W), Y)) - self.vectorize_dloss(np.multiply(np.dot(X, self.V), Y))
 
-			r = np.zeros(x_shape[1])
 
-			#If the difference is 0, then the derivative converges to reg
-			if diff_loss == 0:
-				r.fill(self.reg)
-			else:
-				if self.dloss(self.z) == 0:
-					r.fill(self.reg)
-				else:
-					r = self.reg - diff_loss / self.dloss(self.z) * np.reciprocal(self.B)
-					#If X_t is 0, r_t converges to reg
-					r[X.reshape(x_shape[1]) == 0] = self.reg
+			r = np.zeros((x_shape[1], y_shape[1]))
 
-			temp1 = np.empty(x_shape[1])
+			#If the difference is 0, derivative is 0 or X is 0, then the derivative converges to reg
+			reg_mask = (diff_loss.reshape(y_shape[1]) == 0) | (self.vectorize_dloss(self.z).reshape(y_shape[1]) == 0)
+
+			r[:, reg_mask] = self.reg
+			r[:, ~reg_mask] = self.reg - diff_loss[(~reg_mask).reshape(1, y_shape[1])] / self.vectorize_dloss(self.z)[(~reg_mask).reshape(1, y_shape[1])] * np.reciprocal(self.B[:, ~reg_mask])
+			r[X.reshape(x_shape[1]) == 0, :] = self.reg
+
+			#Projection back to regularization
+			temp1 = np.empty((x_shape[1], y_shape[1]))
 			temp1.fill(self.reg)
-
 			r = np.maximum(np.minimum (r, temp1 * 100), temp1)
 
 			#Update the matrix
@@ -133,7 +131,7 @@ class SGDQN(object):
 			self.updateB = False 
 			
 		#Store the previous score
-		self.z = np.multiply(np.dot(X, self.W), Y)[0][0]
+		self.z = np.multiply(np.dot(X, self.W), Y)
 		self.count = self.count - 1
 
 		#Update Regularization at each skip
@@ -141,23 +139,23 @@ class SGDQN(object):
 			self.count = self.skip
 			self.updateB = True
 			self.V = self.W
-			
-			self.W = self.W - self.skip * self.reg * np.multiply(self.B.reshape(self.B.shape[0], 1), self.W)
-
-			
+			self.W = self.W - self.skip * self.reg * np.multiply(self.B, self.W)
 
 		#SGD step
-		self.W = self.W - self.dloss(self.z) * Y[0] * np.multiply(X, self.B).T
-		
-		
+		self.W = self.W - self.vectorize_dloss(self.z) * Y * np.multiply(X, self.B.T).T
 		
 		if self.check:
 			#Sanity Check on Loss Function
 			if self.iteration % 1000 == 0:
 				print "loss", self.loss(self.X, self.Y)
 		
-		
 		self.iteration = self.iteration + 1
+
+	def vectorize_dloss(self, z):
+		#L1-loss vectorize
+		dloss = np.zeros(z.shape)
+		dloss[z<1] = -1
+		return dloss
 
 	def dloss(self, z):
 		#This is only for L1-SVM now. Todo: Implement more loss function
@@ -165,11 +163,18 @@ class SGDQN(object):
 			return -1
 		return 0
 	def score(self, X, Y):
-		prediction = np.multiply(np.dot(X, self.W), Y.reshape(Y.shape[0], 1))
-		return len(prediction[prediction > 0]) / float(len(prediction))
+		#binary svm
+		if Y.shape[1] == 1:
+			prediction = np.multiply(np.dot(X, self.W), Y)
+			return len(prediction[prediction > 0]) / float(len(prediction))
+		#ova svm
+		else:
+			#prediction
+			prediction = np.argmax(np.dot(X, self.W), axis = 1) - np.argmax(Y, axis = 1)
+			return len(prediction[prediction == 0]) / float(len(prediction))
 	
 	def loss(self, X, Y):
-		loss = 1 - np.multiply(np.dot(X, self.W), Y.reshape(Y.shape[0], 1))
+		loss = 1 - np.multiply(np.dot(X, self.W), Y)
 		return np.sum(loss[loss > 0])
 
 	def solve(self):

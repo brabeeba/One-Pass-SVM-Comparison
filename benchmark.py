@@ -21,38 +21,44 @@ def benchmark1():
 		X, Y = make_classification(n_samples = sample, random_state = 1111)
 		Y[Y==0] = -1
 		reg = 1e-4
-		model1 = classifiers.Pegasos(reg, 1, X=X, Y=Y, maxiter = 1e8)
-		model2 = classifiers.SGDQN(reg, 1e5, 10, X=X, Y=Y, maxiter = 1e8, check = True)
+		model1 = classifiers.Pegasos(reg, 1, X=X, Y=Y, maxiter = 1e8, check = False)
+		model2 = classifiers.SGDQN(reg, 1e5, 10, X=X, Y=Y, maxiter = 1e8, check = False)
 		model3 = classifiers.ASGD(reg, X=X, Y=Y, maxiter = 1e8, check = False)
 		model4 = classifiers.OLBFGS(reg, 10 , X=X, Y=Y, check = False, maxiter = 1e8)
 
 		
 		for epoch in xrange(1,epoches + 1):
+
+
 			
 			start = time.clock()
 			for i in xrange(0, sample):
-				model1.update(X[[i]], Y[[i]])
+				model1.update(X[[i]], Y[[i]].reshape((1, Y[[i]].shape[0])))
 			end = time.clock()
 			time1.append(end - start)
 
 			print "Finished Pegasos in {0}".format(time1[-1])
 
+			
+
 			start = time.clock()
 			for i in xrange(0, sample):
-				model2.update(X[[i]], Y[[i]])
+				model2.update(X[[i]], Y[[i]].reshape((1, Y[[i]].shape[0])))
 			end = time.clock()
 			time2.append(end - start)
 
 			print "Finished SGD-QN in {0}".format(time2[-1])
 			
 			
+			
 			start = time.clock()
 			for i in xrange(0, sample):
-				model3.update(X[[i]], Y[[i]])
+				model3.update(X[[i]], Y[[i]].reshape((1, Y[[i]].shape[0])))
 			end = time.clock()
 			time3.append(end - start)
 
 			print "Finished ASGD in {0}".format(time3[-1])
+		
 			
 
 			start = time.clock()
@@ -62,6 +68,7 @@ def benchmark1():
 			time4.append(end - start)
 
 			print "Finish oLBFGS in {0}".format(time4[-1])
+		
 			
 			
 
@@ -110,9 +117,9 @@ def benchmark2(sample):
 	train_number = len(X_train)
 	test_number = len(X_test)
 
-	model1 = classifiers.Pegasos(1e-4, 1, X=X_train, Y=Y_train, maxiter = 1e8)
+	model1 = classifiers.Pegasos(1e-4, 1, X=X_train, Y=Y_train, maxiter = 1e8, check = False)
 	model2 = classifiers.SGDQN(1e-4, 1e5, 10, X=X_train, Y=Y_train, maxiter = 1e8, check = False)
-	model3 = classifiers.ASGD(1e-4, X=X_train, Y=Y_train, maxiter = 1e8)
+	model3 = classifiers.ASGD(1e-4, X=X_train, Y=Y_train, maxiter = 1e8, check = False)
 	model4 = classifiers.OLBFGS(1e-4, 10 , X=X_train, Y=Y_train, check = False, maxiter = 1e8)
 
 	score1 = []
@@ -123,21 +130,22 @@ def benchmark2(sample):
 	for x in xrange(1, epoch * train_number + 1):
 		randomID = np.random.randint(0, train_number - 1)
 
-		model1.update(X_train[[randomID]], Y_train[[randomID]])
-		model2.update(X_train[[randomID]], Y_train[[randomID]])
-		model3.update(X_train[[randomID]], Y_train[[randomID]])
+		model1.update(X_train[[randomID]], Y_train[[randomID]].reshape((1, Y[[randomID]].shape[0])))
+		model2.update(X_train[[randomID]], Y_train[[randomID]].reshape((1, Y[[randomID]].shape[0])))
+		model3.update(X_train[[randomID]], Y_train[[randomID]].reshape((1, Y[[randomID]].shape[0])))
 		#model4.update(X_train[[randomID]], Y_train[[randomID]])
 
 
 
 		if x % int(train_number / 2.0) == 0:
-			score1.append(model1.score(X_test, Y_test))
+			score1.append(model1.score(X_test, Y_test.reshape(Y_test.shape[0], 1)))
+			
 			print "Pegasos accuracy {:10.4f} at {:.2f} epoches".format(score1[-1], float(x)/train_number)
 
-			score2.append(model2.score(X_test, Y_test))
+			score2.append(model2.score(X_test, Y_test.reshape(Y_test.shape[0], 1)))
 			print "SGDQN accuracy {:10.4f} at {:.2f} epoches".format(score2[-1], float(x)/train_number)
 
-			score3.append(model3.score(X_test, Y_test))
+			score3.append(model3.score(X_test, Y_test.reshape(Y_test.shape[0], 1)))
 			print "ASGD accuracy {:10.4f} at {:.2f} epoches".format(score3[-1], float(x)/train_number)
 
 			#score4.append(model4.score(X_test, Y_test))
@@ -153,10 +161,6 @@ def benchmark2(sample):
 	plt.title('Epoches to Accuracy')
 	plt.legend()
 	plt.show()
-
-
-
-
 
 
 
